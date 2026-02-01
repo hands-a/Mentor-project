@@ -49,7 +49,6 @@ export default function RegisterPage() {
         />
       </div>
 
-      {/* Form Container */}
       <div className="flex-1 flex items-center justify-center py-10 px-4">
         <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg border border-gray-100">
 

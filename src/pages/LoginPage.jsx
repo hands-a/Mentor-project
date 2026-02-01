@@ -1,30 +1,38 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import background from "../assets/background.jpg";
-import { ErrorMessage, Field, Form, Formik } from "formik";
-import axios from "axios";
+import { useFormik } from "formik"; 
 import * as Yup from "yup";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useOutletContext();
 
-    const handleLogin = async(values) => {
-    console.log(values);
-    try{
-        const res =  await axios.post('http://localhost:1337/api/auth/local' , values);
-        console.log(res);
-    }catch(error){
-        console.log(error)
-    }
-    };
-    const loginSchema = Yup.object({
-    identifier: Yup.string().email('Invaild email').required('Required'),
-    password: Yup.string().required('Required'),
-    })
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"), 
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters") 
+      .required("Password is required"),
+  });
 
-    return (
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validationSchema: validationSchema,
+    onSubmit: (values) => {
+      login();
+      navigate("/");
+    },
+  });
+
+  return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-
+      
       <div className="relative w-full h-60 md:h-72">
         <img
           src={background}
@@ -34,58 +42,80 @@ export default function LoginPage() {
       </div>
 
       <div className="flex-1 flex items-center justify-center py-10 px-4">
-<div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg border border-gray-100">
-
+        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg border border-gray-100">
           <h2 className="text-center text-[#D9176C] font-bold text-2xl mb-6">
             Welcome Back!
           </h2>
 
-          <Formik
-  initialValues={{
-    identifier: "",
-    password: "",
-  }}
-  validationSchema={loginSchema}
-  onSubmit={handleLogin}
->
-  <Form className="flex flex-col gap-5">
+          <form onSubmit={formik.handleSubmit} className="flex flex-col gap-5">
+            
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email" 
+                placeholder="Enter your email"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.email}
+                className={`w-full border px-4 py-2.5 rounded-md outline-none transition focus:ring-1 
+                  ${
+                    formik.touched.email && formik.errors.email
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:border-[#F04C88] focus:ring-[#F04C88]"
+                  }`}
+              />
+              {formik.touched.email && formik.errors.email ? (
+                <div className="text-red-500 text-xs mt-1 ml-1 font-medium">
+                  {formik.errors.email}
+                </div>
+              ) : null}
+            </div>
 
-    <div>
-      <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
-        Email
-      </label>
-      <Field
-        type="email"
-        name="identifier"
-        placeholder="Enter your email"
-        className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none"
-      />
-      <ErrorMessage name='identifier' component="div" className="text-red-500 text-sm mt-1 py-2"/>
-    </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.password}
+                className={`w-full border px-4 py-2.5 rounded-md outline-none transition focus:ring-1 
+                  ${
+                    formik.touched.password && formik.errors.password
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:border-[#F04C88] focus:ring-[#F04C88]"
+                  }`}
+              />
+              {formik.touched.password && formik.errors.password ? (
+                <div className="text-red-500 text-xs mt-1 ml-1 font-medium">
+                  {formik.errors.password}
+                </div>
+              ) : null}
+            </div>
 
-    <div>
-      <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
-        Password
-      </label>
-      <Field
-  type="password"
-  name="password"
-  placeholder="Enter password"
-  autoComplete="current-password"
-  className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none"
-/>
-    </div>
-      <ErrorMessage name='password' component="div" className="text-red-500 text-sm mt-1 py-2"/>
+            <div className="flex justify-between items-center text-sm mt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" className="accent-[#F04C88] w-4 h-4" />
+                <span className="text-gray-600">Remember me</span>
+              </label>
+              <Link to="/forgot-password" className="text-[#F04C88] hover:underline font-medium">
+                Forgot Password?
+              </Link>
+            </div>
 
-    <button
-      type="submit"
-      className="bg-[#F04C88] text-white py-3 rounded-md font-bold"
-    >
-      Log in
-    </button>
-
-  </Form>
-</Formik>
+            <button
+              type="submit" 
+              className="bg-[#F04C88] text-white py-3 rounded-md font-bold hover:bg-[#d63d76] transition shadow-md mt-2"
+            >
+              Log in
+            </button>
+          </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
             Don't have an account?{" "}
@@ -104,17 +134,15 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <button className="flex items-center justify-center gap-3 border border-gray-300 py-2.5 rounded-md">
+            <button className="flex items-center justify-center gap-3 border border-gray-300 py-2.5 rounded-md hover:bg-gray-50 transition text-sm font-medium text-gray-700 cursor-pointer">
               <FcGoogle size={22} />
-              Login with Google
+              <span>Login with Google</span>
             </button>
-
-            <button className="flex items-center justify-center gap-3 border border-gray-300 py-2.5 rounded-md">
+            <button className="flex items-center justify-center gap-3 border border-gray-300 py-2.5 rounded-md hover:bg-gray-50 transition text-sm font-medium text-gray-700 cursor-pointer">
               <FaFacebook size={20} className="text-[#1877F2]" />
-              Login with Facebook
+              <span>Login with Facebook</span>
             </button>
           </div>
-
         </div>
       </div>
     </div>

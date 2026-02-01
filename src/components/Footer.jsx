@@ -1,7 +1,7 @@
 import { FaFacebookF, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
-import { MdOutlineBookOnline } from "react-icons/md"; // نفس أيقونة اللوجو
-import { IoEarth } from "react-icons/io5"; // أيقونة الكرة الأرضية
-import { MdKeyboardArrowRight } from "react-icons/md"; // سهم زر اللغة
+import { MdOutlineBookOnline } from "react-icons/md"; 
+import { IoEarth } from "react-icons/io5"; 
+import { MdKeyboardArrowRight } from "react-icons/md"; 
 import { FaXTwitter } from "react-icons/fa6";
 
 export default function Footer() {
@@ -52,7 +52,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-300 gap-4">
         
         <p>
-            &lt;Developed By&gt; EraaSoft &lt;All Copy Rights Reserved @2024
+            &lt;Developed By&gt; EraaSoft &lt;All Copy Rights Reserved @2026
         </p>
         <button className="flex items-center gap-2 border border-gray-500 rounded-full px-4 py-1.5 hover:border-white transition cursor-pointer">
             <IoEarth size={18} />

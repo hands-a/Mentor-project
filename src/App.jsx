@@ -1,5 +1,6 @@
 import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./Routes/AppRoutes"; // استدعينا ملف الراوتس اللي عملناه فوق
+import AppRoutes from "./Routes/AppRoutes";
+
 
 function App() {
   return (
