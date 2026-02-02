@@ -26,7 +26,7 @@ export default function LoginPage() {
     validationSchema: validationSchema,
     onSubmit: (values) => {
       login();
-      navigate("/");
+      navigate("/login");
     },
   });
 
