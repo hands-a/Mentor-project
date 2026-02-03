@@ -1,4 +1,4 @@
-import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import background from "../assets/background.jpg";
@@ -7,7 +7,6 @@ import * as Yup from "yup";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useOutletContext();
 
   const validationSchema = Yup.object({
     email: Yup.string()
@@ -25,8 +24,15 @@ export default function LoginPage() {
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
-      login();
-      navigate("/login");
+      const userData = {
+        name: "John Smith",
+        email: values.email,
+        token: "fake-jwt-token-123"
+      };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      window.dispatchEvent(new Event("authUpdated"));
+      navigate("/"); 
     },
   });
 

@@ -7,6 +7,8 @@ import ForgotPasswordPage from "../pages/ForgetPassword";
 import SendCode from "../pages/SendCode"; 
 import NewPasswordPage from "../pages/NewPasswordPage"; 
 import AboutPage from "../pages/AboutPage"; 
+import BooksPage from "../pages/BooksPage";
+import BookDetailsPage from "../pages/BookDetailsPage";
 
 const AppRoutes = () => {
   return (
@@ -24,7 +26,9 @@ const AppRoutes = () => {
         <Route path="reset-password" element={<SendCode />} />
         <Route path="new-password" element={<NewPasswordPage />} />
         <Route path="about" element={<AboutPage />} />
-        <Route path="books" element={<div className="h-screen pt-40 text-center">Books Soon</div>} />
+        <Route path="books" element={<BooksPage />} />
+<Route path="books/:id" element={<BookDetailsPage />} />  
+      <Route path="books" element={<div className="h-screen pt-40 text-center">Books Soon</div>} />
        
       </Route>
     </Routes>
