@@ -1,144 +1,124 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { 
   FaStar, FaHeart, FaShoppingCart, FaFacebookF, FaTwitter, FaWhatsapp, 
   FaShareAlt, FaInstagram, FaCheck, FaMinus, FaPlus, FaChevronLeft, FaChevronRight 
 } from "react-icons/fa";
 import headerBg from "../assets/background.jpg"; 
-
-import book1 from "../assets/1.jpg";    
-import book2 from "../assets/2.jpg";
-import book3 from "../assets/3.jpg";
-import book4 from "../assets/4.jpg";
-
-const booksData = [
-  {
-    id: 1,
-    title: "Rich Dad And Poor Dad",
-    author: "Robert T. Kiyosaki",
-    price: 40.00,
-    rating: 4.2,
-    reviews: 210,
-    year: 1997,
-    category: "Business",
-    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ultricies est. Aliquam in justo varius, sagittis neque ut, malesuada leo.",
-    discountCode: "Nx212",
-    image: book1,
-    pages: 336,
-    language: "English",
-    sku: "B09TWSRMCB",
-    stock: "In Stock"
-  },
-  {
-    id: 2,
-    title: "Think and Grow Rich",
-    author: "Napoleon Hill",
-    price: 35.00,
-    rating: 4.8,
-    reviews: 500,
-    year: 1937,
-    category: "Self Help",
-    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ultricies est. Aliquam in justo varius, sagittis neque ut, malesuada leo.",
-    discountCode: "Nx212",
-    image: book2,
-    pages: 280,
-    language: "English",
-    sku: "TGR1937NH",
-    stock: "In Stock"
-  },
-  {
-    id: 3,
-    title: "The Psychology of Money",
-    author: "Morgan Housel",
-    price: 42.00,
-    rating: 4.7,
-    reviews: 320,
-    year: 2020,
-    category: "Business",
-    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ultricies est. Aliquam in justo varius, sagittis neque ut, malesuada leo.",
-    discountCode: "Nx212",
-    image: book3,
-    pages: 250,
-    language: "English",
-    sku: "POM2020MH",
-    stock: "In Stock"
-  },
-  {
-    id: 4,
-    title: "Atomic Habits",
-    author: "James Clear",
-    price: 25.00,
-    rating: 4.9,
-    reviews: 1200,
-    year: 2018,
-    category: "Self Help",
-    desc: "An easy & proven way to build good habits & break bad ones.",
-    discountCode: "Habit20",
-    image: book4,
-    pages: 320,
-    language: "English",
-    sku: "AH2018JC",
-    stock: "Out of Stock"
-  },
-];
+import bookPlaceholder from "../assets/1.jpg";
 
 export default function BookDetailsPage() {
   const { id } = useParams();
-  const product = booksData.find((b) => b.id === parseInt(id));
-
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("details");
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const [recommendedBooks, setRecommendedBooks] = useState([]);
 
   useEffect(() => {
+    setLoading(true);
+    axios.get(`https://bookstore.eraasoft.pro/api/book/${id}`)
+      .then((res) => {
+        const bookData = res.data.data;
+        setProduct({
+            id: bookData.bookId || bookData.id,
+            title: bookData.bookName || bookData.title,
+            author: bookData.author,
+            price: parseFloat(bookData.price) || 0,
+            image: bookData.image || bookPlaceholder,
+            category: bookData.category,
+            desc: bookData.description,
+            stock: bookData.stock || "In Stock",
+            pages: 300, 
+            year: bookData.publication_year || "2023",
+            rating: bookData.rating || 5,
+            reviews: 120,
+            language: "English",
+            sku: "BK" + (bookData.bookId || id),
+            discountCode: "SALE20"
+        });
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+
+      axios.get("https://bookstore.eraasoft.pro/api/home")
+      .then((res) => {
+        const data = res.data.data.recommended || [];
+        setRecommendedBooks(data.map(item => ({
+            id: item.bookId || item.id,
+            title: item.bookName || item.title,
+            author: item.author,
+            price: parseFloat(item.price),
+            image: item.image || bookPlaceholder,
+            rating: 5,
+            reviews: 50
+        })));
+      });
+
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
     setCart(savedCart);
     setWishlist(savedWishlist);
-  }, []);
+  }, [id]);
 
-  const updateStorage = (key, data) => {
-    localStorage.setItem(key, JSON.stringify(data));
-    window.dispatchEvent(new Event("storageUpdated"));
-  };
+  const handleAddToCart = () => {
+    const token = localStorage.getItem("userToken");
+    if (!token) { navigate("/login"); return; }
 
-  if (!product) {
-    return <div className="text-center py-20 text-2xl font-bold text-gray-500">Book Not Found!</div>;
-  }
+    const formData = new FormData();
+    formData.append("book_id", product.id);
+    formData.append("qty", quantity);
 
-  const handleAddToCart = (item) => {
-    const targetId = item ? item.id : product.id;
-    let newCart;
-
-    if (cart.includes(targetId)) {
-      newCart = cart.filter(cartId => cartId !== targetId);
-    } else {
-      newCart = [...cart, targetId];
-    }
-    
-    setCart(newCart);
-    updateStorage("cart", newCart);
+    axios.post(`https://bookstore.eraasoft.pro/api/cart/store`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+    }).then(() => {
+        window.dispatchEvent(new Event("storageUpdated"));
+        setCart([...cart, product.id]);
+        alert("Added to Cart Successfully");
+    }).catch(() => alert("Failed to add to cart"));
   };
 
   const handleToggleWishlist = () => {
-    let newWishlist;
+    const token = localStorage.getItem("userToken");
+    if (!token) { navigate("/login"); return; }
+
     if (wishlist.includes(product.id)) {
-      newWishlist = wishlist.filter(item => item !== product.id);
+        const formData = new FormData();
+        formData.append("_method", "delete");
+        axios.post(`https://bookstore.eraasoft.pro/api/wishlist/destroy/${product.id}`, formData, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(() => {
+            setWishlist(prev => prev.filter(id => id !== product.id));
+            window.dispatchEvent(new Event("storageUpdated"));
+        });
     } else {
-      newWishlist = [...wishlist, product.id];
+        const formData = new FormData();
+        formData.append("book_id", product.id);
+        axios.post(`https://bookstore.eraasoft.pro/api/wishlist/store`, formData, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(() => {
+            setWishlist([...wishlist, product.id]);
+            window.dispatchEvent(new Event("storageUpdated"));
+            alert("Added to Wishlist");
+        });
     }
-    setWishlist(newWishlist);
-    updateStorage("wishlist", newWishlist);
   };
 
   const incrementQty = () => setQuantity(prev => prev + 1);
   const decrementQty = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
+  if (loading) return <div className="text-center py-20 text-gray-500">Loading Book Details...</div>;
+  if (!product) return <div className="text-center py-20 text-red-500">Book Not Found!</div>;
+
   const isAddedToCart = cart.includes(product.id);
   const isAddedToWishlist = wishlist.includes(product.id);
-
-  const recommendedBooks = booksData.filter(b => b.id !== product.id).slice(0, 2);
 
   return (
     <div className="bg-[#FDFDFD] min-h-screen font-sans pb-12">
@@ -238,7 +218,7 @@ export default function BookDetailsPage() {
                 </div>
 
                 <button 
-                    onClick={() => handleAddToCart()}
+                    onClick={handleAddToCart}
                     className={`flex-1 px-8 py-3 rounded-md font-bold text-white flex items-center justify-center gap-2 transition shadow-md
                     bg-[#F04C88] hover:bg-[#d63d76]"}`}
                 >
@@ -301,7 +281,7 @@ export default function BookDetailsPage() {
                             <span className="font-bold text-[#393280]">Publication Date :</span>
                             <span className="text-gray-600">{product.year}</span>
                         </div>
-                         <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <div className="flex justify-between border-b border-gray-200 pb-2">
                             <span className="font-bold text-[#393280]">Publisher :</span>
                             <span className="text-gray-600">Printer</span>
                         </div>
@@ -367,57 +347,17 @@ export default function BookDetailsPage() {
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ultricies est. Aliquam in justo varius, sagittis neque ut.
                             </p>
                         </div>
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                    <img src="https://i.pravatar.cc/150?img=13" alt="User" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-[#393280] text-sm">Mike Ross</h4>
-                                    <span className="text-xs text-[#00BFA6] font-medium">Verified Purchase</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="font-bold text-sm">Highly Recommended</span>
-                                <div className="flex text-[#FFD700] text-xs">
-                                    {[...Array(5)].map((_, i) => <FaStar key={i} />)}
-                                </div>
-                            </div>
-                            <p className="text-gray-500 text-xs leading-relaxed">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ultricies est. Aliquam in justo varius, sagittis neque ut.
-                            </p>
-                        </div>
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                             <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                    <img src="https://i.pravatar.cc/150?img=14" alt="User" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-[#393280] text-sm">Emily Clark</h4>
-                                    <span className="text-xs text-[#00BFA6] font-medium">Verified Purchase</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="font-bold text-sm">Loved it!</span>
-                                <div className="flex text-[#FFD700] text-xs">
-                                    {[...Array(5)].map((_, i) => <FaStar key={i} />)}
-                                </div>
-                            </div>
-                            <p className="text-gray-500 text-xs leading-relaxed">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ultricies est. Aliquam in justo varius, sagittis neque ut.
-                            </p>
-                        </div>
                     </div>
                 )}
 
                 {activeTab === "recommended" && (
-                     <div className="flex justify-center items-center gap-8 relative px-12">
+                      <div className="flex justify-center items-center gap-8 relative px-12">
                         <button className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-[#F04C88] text-[#F04C88] flex items-center justify-center hover:bg-[#F04C88] hover:text-white transition">
                             <FaChevronLeft size={12} />
                         </button>
 
-                        {recommendedBooks.map((book) => (
-                            <div key={book.id} className="bg-[#393280] rounded-xl p-6 flex items-center gap-6 w-[400px] text-white relative overflow-hidden group">
+                        {recommendedBooks.slice(0, 2).map((book) => (
+                            <div key={book.id} onClick={() => navigate(`/books/${book.id}`)} className="bg-[#393280] rounded-xl p-6 flex items-center gap-6 w-[400px] text-white relative overflow-hidden group cursor-pointer">
                                 <div className="w-24 h-36 flex-shrink-0 shadow-lg">
                                     <img src={book.image} alt={book.title} className="w-full h-full object-cover rounded-sm" />
                                 </div>
@@ -428,24 +368,13 @@ export default function BookDetailsPage() {
                                     
                                     <div className="flex items-center gap-1 text-yellow-400 text-xs mb-3">
                                         {[...Array(5)].map((_, i) => <FaStar key={i} />)}
-                                        <span className="text-gray-300 ml-1">({book.reviews})</span>
+                                        <span className="text-gray-300 ml-1">({book.reviews || 50})</span>
                                     </div>
                                     
                                     <div className="flex items-center gap-3">
                                         <span className="font-bold text-xl">${book.price}</span>
                                         <span className="text-sm text-gray-400 line-through">${book.price + 10}</span>
                                     </div>
-                                    
-                                    <button 
-                                        onClick={() => handleAddToCart(book)}
-                                        className={`mt-4 w-8 h-8 rounded-full flex items-center justify-center transition absolute bottom-4 right-4
-                                        ${cart.includes(book.id) 
-                                            ? "bg-green-600 text-white" 
-                                            : "bg-[#F04C88] hover:bg-white hover:text-[#F04C88]"
-                                        }`}
-                                    >
-                                        {cart.includes(book.id) ? <FaCheck size={12} /> : <FaShoppingCart size={12} />}
-                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -453,7 +382,7 @@ export default function BookDetailsPage() {
                         <button className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-[#F04C88] text-[#F04C88] flex items-center justify-center hover:bg-[#F04C88] hover:text-white transition">
                             <FaChevronRight size={12} />
                         </button>
-                     </div>
+                      </div>
                 )}
             </div>
         </div>

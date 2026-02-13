@@ -9,6 +9,10 @@ import NewPasswordPage from "../pages/NewPasswordPage";
 import AboutPage from "../pages/AboutPage"; 
 import BooksPage from "../pages/BooksPage";
 import BookDetailsPage from "../pages/BookDetailsPage";
+import CartPage from "../pages/CartPage";
+import WishlistPage from "../pages/WishlistPage";
+import CheckoutPage from "../pages/CheckoutPage";
+import OrderHistoryPage from "../pages/OrderHistoryPage";
 
 const AppRoutes = () => {
   return (
@@ -28,6 +32,10 @@ const AppRoutes = () => {
         <Route path="about" element={<AboutPage />} />
         <Route path="books" element={<BooksPage />} />
 <Route path="books/:id" element={<BookDetailsPage />} />  
+<Route path="cart" element={<CartPage />} />
+<Route path="wishlist" element={<WishlistPage />} />
+<Route path="checkout" element={<CheckoutPage />} />
+<Route path="order-history" element={<OrderHistoryPage />} />
       <Route path="books" element={<div className="h-screen pt-40 text-center">Books Soon</div>} />
        
       </Route>

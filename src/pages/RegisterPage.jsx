@@ -9,21 +9,38 @@ import axios from "axios";
 export default function RegisterPage() {
   const navigate = useNavigate();
 
-  const handleRegister = async (values) => {
+  const handleRegister = async (values, { setSubmitting, setErrors }) => {
     try {
       const data = {
-        username: `${values.firstName} ${values.lastName}`,
+        first_name: values.firstName,
+        last_name: values.lastName,
         email: values.email,
         password: values.password,
+        password_confirmation: values.confirmPassword, 
       };
+
       const res = await axios.post(
-        "http://localhost:1337/api/auth/local/register",
+        "https://bookstore.eraasoft.pro/api/register",
         data
       );
-      console.log(res);
+
+      console.log("Registration Success:", res.data);
+      
       navigate("/login");
+      
     } catch (error) {
-      console.log(error);
+      console.error("Registration Error:", error);
+
+      if (error.response && error.response.data && error.response.data.errors) {
+         setErrors(error.response.data.errors);
+      } else if (error.response && error.response.data && error.response.data.message) {
+         setErrors({ email: error.response.data.message });
+      } else {
+         setErrors({ email: "Registration failed. Please try again." });
+      }
+
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -31,7 +48,7 @@ export default function RegisterPage() {
     firstName: Yup.string().required("Required"),
     lastName: Yup.string().required("Required"),
     email: Yup.string().email("Invalid email").required("Required"),
-    password: Yup.string().required("Required"),
+    password: Yup.string().required("Required").min(6, "Password is too short"),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password"), null], "Passwords must match")
       .required("Required"),
@@ -40,7 +57,6 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
 
-      {/* Header Image */}
       <div className="relative w-full h-60 md:h-72">
         <img
           src={background}
@@ -67,89 +83,91 @@ export default function RegisterPage() {
             validationSchema={registerSchema}
             onSubmit={handleRegister}
           >
-            <Form className="flex flex-col gap-5">
+            {({ isSubmitting }) => (
+              <Form className="flex flex-col gap-5">
 
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
-                  First Name
-                </label>
-                <Field
-                  type="text"
-                  name="firstName"
-                  placeholder="John"
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none"
-                />
-                <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm mt-1 py-2"/>
-              </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                    First Name
+                  </label>
+                  <Field
+                    type="text"
+                    name="firstName"
+                    placeholder="John"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none focus:border-[#D9176C]"
+                  />
+                  <ErrorMessage name="firstName" component="div" className="text-red-500 text-xs mt-1"/>
+                </div>
 
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
-                  Last Name
-                </label>
-                <Field
-                  type="text"
-                  name="lastName"
-                  placeholder="Smith"
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none"
-                />
-                <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm mt-1 py-2"/>
-              </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                    Last Name
+                  </label>
+                  <Field
+                    type="text"
+                    name="lastName"
+                    placeholder="Smith"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none focus:border-[#D9176C]"
+                  />
+                  <ErrorMessage name="lastName" component="div" className="text-red-500 text-xs mt-1"/>
+                </div>
 
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
-                  Email
-                </label>
-                <Field
-                  type="email"
-                  name="email"
-                  placeholder="example@gmail.com"
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none"
-                />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 py-2"/>
-              </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                    Email
+                  </label>
+                  <Field
+                    type="email"
+                    name="email"
+                    placeholder="example@gmail.com"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none focus:border-[#D9176C]"
+                  />
+                  <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1"/>
+                </div>
 
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
-                  Password
-                </label>
-                <Field
-                  type="password"
-                  name="password"
-                  placeholder="Enter password"
-                  autoComplete="new-password"
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none"
-                />
-                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1 py-2"/>
-              </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                    Password
+                  </label>
+                  <Field
+                    type="password"
+                    name="password"
+                    placeholder="Enter password"
+                    autoComplete="new-password"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none focus:border-[#D9176C]"
+                  />
+                  <ErrorMessage name="password" component="div" className="text-red-500 text-xs mt-1"/>
+                </div>
 
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
-                  Confirm Password
-                </label>
-                <Field
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm password"
-                  autoComplete="new-password"
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none"
-                />
-                <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm mt-1 py-2"/>
-              </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                    Confirm Password
+                  </label>
+                  <Field
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Confirm password"
+                    autoComplete="new-password"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-md outline-none focus:border-[#D9176C]"
+                  />
+                  <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-xs mt-1"/>
+                </div>
 
-              <button
-                type="submit"
-                className="bg-[#F04C88] text-white py-3 rounded-md font-bold hover:bg-[#d63d76] transition"
-              >
-                Sign Up
-              </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full bg-[#D9176C] text-white font-bold py-3 rounded-md hover:bg-[#b01357] transition shadow-md disabled:opacity-50 mt-2"
+                >
+                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                </button>
 
-            </Form>
+              </Form>
+            )}
           </Formik>
 
           <p className="text-center text-sm text-gray-600 mt-6">
             Already have an account?{" "}
-            <Link to="/login" className="text-[#F04C88] font-bold hover:underline">
+            <Link to="/login" className="text-[#D9176C] font-bold hover:underline">
               Login
             </Link>
           </p>

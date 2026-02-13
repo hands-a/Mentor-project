@@ -1,9 +1,10 @@
 import { useNavigate, Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
+import { FaFacebook, FaEnvelope, FaLock } from "react-icons/fa";
 import background from "../assets/background.jpg";
 import { useFormik } from "formik"; 
 import * as Yup from "yup";
+import axios from "axios";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -23,16 +24,31 @@ export default function LoginPage() {
       password: "",
     },
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      const userData = {
-        name: "John Smith",
-        email: values.email,
-        token: "fake-jwt-token-123"
-      };
+    onSubmit: async (values, { setSubmitting, setErrors }) => {
+      try {
+        const res = await axios.post("https://bookstore.eraasoft.pro/api/login", {
+          email: values.email,
+          password: values.password
+        });
 
-      localStorage.setItem("user", JSON.stringify(userData));
-      window.dispatchEvent(new Event("authUpdated"));
-      navigate("/"); 
+        const { token, user } = res.data.data;
+
+        localStorage.setItem("userToken", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        
+        window.dispatchEvent(new Event("authUpdated"));
+        window.dispatchEvent(new Event("storageUpdated"));
+        
+        navigate("/"); 
+      } catch (error) {
+        console.error(error);
+        setErrors({ 
+          email: "Invalid email or password", 
+          password: "Check your credentials" 
+        });
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
@@ -59,20 +75,24 @@ export default function LoginPage() {
               <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
                 Email
               </label>
-              <input
-                type="email"
-                name="email" 
-                placeholder="Enter your email"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.email}
-                className={`w-full border px-4 py-2.5 rounded-md outline-none transition focus:ring-1 
-                  ${
-                    formik.touched.email && formik.errors.email
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <FaEnvelope />
+                </div>
+                <input
+                  type="email"
+                  name="email" 
+                  placeholder="Enter your email"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.email}
+                  className={`w-full border pl-10 pr-4 py-2.5 rounded-md outline-none transition focus:ring-1 
+                    ${formik.touched.email && formik.errors.email
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:border-[#F04C88] focus:ring-[#F04C88]"
-                  }`}
-              />
+                    }`}
+                />
+              </div>
               {formik.touched.email && formik.errors.email ? (
                 <div className="text-red-500 text-xs mt-1 ml-1 font-medium">
                   {formik.errors.email}
@@ -84,20 +104,24 @@ export default function LoginPage() {
               <label className="block text-gray-700 text-sm font-bold mb-2 ml-1">
                 Password
               </label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter password"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.password}
-                className={`w-full border px-4 py-2.5 rounded-md outline-none transition focus:ring-1 
-                  ${
-                    formik.touched.password && formik.errors.password
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <FaLock />
+                </div>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Enter password"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.password}
+                  className={`w-full border pl-10 pr-4 py-2.5 rounded-md outline-none transition focus:ring-1 
+                    ${formik.touched.password && formik.errors.password
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:border-[#F04C88] focus:ring-[#F04C88]"
-                  }`}
-              />
+                    }`}
+                />
+              </div>
               {formik.touched.password && formik.errors.password ? (
                 <div className="text-red-500 text-xs mt-1 ml-1 font-medium">
                   {formik.errors.password}
@@ -117,9 +141,10 @@ export default function LoginPage() {
 
             <button
               type="submit" 
-              className="bg-[#F04C88] text-white py-3 rounded-md font-bold hover:bg-[#d63d76] transition shadow-md mt-2"
+              disabled={formik.isSubmitting}
+              className="bg-[#F04C88] text-white py-3 rounded-md font-bold hover:bg-[#d63d76] transition shadow-md mt-2 disabled:opacity-70"
             >
-              Log in
+              {formik.isSubmitting ? "Logging in..." : "Log in"}
             </button>
           </form>
 
